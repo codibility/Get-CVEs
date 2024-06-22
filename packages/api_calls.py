@@ -1,7 +1,7 @@
 from termcolor import colored
-import datetime
+import datetime, re
 
-def multi_choice(actions: list, params: dict, inpt: str):
+def multi_choice(actions: list, params: dict, inpt: str) -> dict:
     choices = inpt.split(",")
     for i in choices:
         try:
@@ -16,25 +16,29 @@ def multi_choice(actions: list, params: dict, inpt: str):
     return params
 
 
-def search_by_cveId(params: dict, cve_id: str|None =None):
+def search_by_cveId(params: dict, cve_id: str|None =None) -> dict:
     if cve_id == None:
         print(colored("\n[+] CVE id search", "magenta", attrs=["bold"]))
         print(
             colored(
-                "CVE should be entered in this format: CVE-YYYY-NNNNNNN",
+                "Format: CVE-YYYY-NNNNNN OR YYYY-NNNNNN OR NNNNNN (Current year)",
                 "blue",
                 attrs=["bold"],
             )
         )
         cve_id = input("Enter CVE id > ")
-    if "CVE" not in cve_id:
-        cve_id = "CVE-" + cve_id
+    if len(cve_id.split("-")) != 3:
+        if not re.search('^[0-9]{4}-[0-9]*', cve_id) and "CVE" not in cve_id:
+            cve_id = str(datetime.datetime.today().year) + "-" + cve_id
+
+        if "CVE" not in cve_id:
+            cve_id = "CVE-" + cve_id
     
     params["cveId"] = cve_id
     return params 
 
 
-def based_on_cvssV2Severity(params, cv2severity = None):
+def based_on_cvssV2Severity(params: dict, cv2severity = None) -> dict:
     severity = ["LOW", "MEDIUM", "HIGH"]
     if cv2severity == None:
         print(colored("\n[+] cvssV2Severity search", "magenta", attrs=["bold"]))
@@ -54,7 +58,7 @@ def based_on_cvssV2Severity(params, cv2severity = None):
     return params
 
 
-def based_on_cvssV3Severity(params):
+def based_on_cvssV3Severity(params: dict) -> dict:
     print(colored("\n[+] cvssV3Severity search", "magenta", attrs=["bold"]))
     severity = ["LOW", "MEDIUM", "HIGH", "CRICTICAL"]
     for k, v in enumerate(severity):
@@ -72,7 +76,7 @@ def based_on_cvssV3Severity(params):
     params["cvssV3Severity"] = severity[inpt]
     return params
 
-def resultsPerPage(params, resultsPerPage=0):
+def resultsPerPage(params: dict, resultsPerPage=0) -> dict:
     if resultsPerPage == 0:
         print(colored("\n[+] Results per page", "magenta", attrs=["bold"]))
         resultsPerPage = input("Enter results per page > ")
@@ -80,7 +84,7 @@ def resultsPerPage(params, resultsPerPage=0):
     params["resultsPerPage"] = resultsPerPage
     return params
 
-def startIndex(params, startIndex=0):
+def startIndex(params: dict, startIndex=0)  -> dict:
     if startIndex == 0:
         print(colored("\n[+] Start Index", "magenta", attrs=["bold"]))
         startIndex = input("Enter start index > ")
@@ -88,27 +92,27 @@ def startIndex(params, startIndex=0):
     params["startIndex"] = startIndex
     return params
 
-def hasCertAlerts(params):
+def hasCertAlerts(params: dict) -> dict:
     print(colored("\n[+] Has Cert Alerts", "magenta", attrs=["bold"]))
     
     params["hasCertAlerts"] = None
     return params
 
 
-def hasCertNotes(params):
+def hasCertNotes(params: dict) -> dict:
     print(colored("\n[+] Has Cert Notes", "magenta", attrs=["bold"]))
     
     params["hasCertNotes"] = None
     return params
 
-def keywordExactMatch(params):
+def keywordExactMatch(params: dict) -> dict:
     print(colored("\n[+] Matches keywords exactly", "magenta", attrs=["bold"]))
     
     params["keywordExactMatch"] = None
     return params
 
 
-def get_cve_based_on_pub_date(params):
+def get_cve_based_on_pub_date(params: dict) -> dict:
     print(colored("\n[+] Filter based on publication Date",
           "magenta", attrs=["bold"]))
     print(
@@ -116,19 +120,19 @@ def get_cve_based_on_pub_date(params):
             "Date should be entered in this format: YYYY-MM-DD", "blue", attrs=["bold"]
         )
     )
-    start_date = input("Enter start date (Default is one week ago) > ")
+    start_date = input("Enter start date (Default is 7 days ago) > ")
 
     today = datetime.date.today()
     if start_date == "":
         start_date = today - datetime.timedelta(days=7)
     else:
-        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
 
     end_date = input("Enter end date > ")
     if end_date == "":
         end_date = today
     else:
-        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
     
     
     params["pubStartDate"] = start_date
@@ -137,7 +141,7 @@ def get_cve_based_on_pub_date(params):
     return params
 
 
-def get_cve_based_on_mod_date(params):
+def get_cve_based_on_mod_date(params: dict) -> dict:
     print(colored("\n[+] Filter based on Modification date",
           "magenta", attrs=["bold"]))
     print(
@@ -154,7 +158,7 @@ def get_cve_based_on_mod_date(params):
     return params
 
 
-def keyword_search(params, keyword=None):
+def keyword_search(params: dict, keyword=None) -> dict:
     if keyword == None:
         print(colored("\n[+] Keyword search", "magenta", attrs=["bold"]))
         keyword = input("Enter keyword > ")
@@ -162,3 +166,18 @@ def keyword_search(params, keyword=None):
     params["keywordSearch"] = keyword
     return params
     
+def search_by_cwe(params: dict, cwe: str = None) -> dict:
+    if cwe == None:
+        print(colored("\n[+] CWE Key search", "magenta", attrs=["bold"]))
+        cwe = input("Enter CWE > ")
+    
+    params["cwe"] = cwe
+    return params 
+
+
+def search_by_cwe_must_match(params: dict, cwe: str = None) -> dict:
+    params = search_by_cwe(params, cwe)
+    params['cweExact'] = params['cwe']
+    del params['cwe']
+
+    return params

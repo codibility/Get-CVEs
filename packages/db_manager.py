@@ -3,11 +3,12 @@ from typing import List, Dict, Optional
 
 from termcolor import colored
 
-from packages.init_conf import init_conf
+from packages.init_conf import init_conf, main_folder
 
 database = init_conf['database_location']
+database_folder = '/'.join(database.split('/')[:-1])
 save_dir = init_conf['save_location']
-base_dir = os.getcwd()
+base_dir = main_folder
 change_log: list = []
 
 # To Do; The changelog variable that stores all the changes made can be written to a log file along with the date
@@ -350,12 +351,12 @@ def update_local_database(initialized_database: bool):
 
 
         # Save previous commit
-        if not os.path.isfile(os.path.join(base_dir, 'database', '.previousCommit')):
-            with open(os.path.join(base_dir, 'database', '.previousCommit'), 'w') as f:
+        if not os.path.isfile(os.path.join(database_folder, '.previousCommit')):
+            with open(os.path.join(database_folder, '.previousCommit'), 'w') as f:
                 prev_commit = subprocess.getoutput('git rev-parse --short HEAD')
                 f.write(subprocess.getoutput('git rev-parse --short HEAD~1'))
         else:
-            with open(os.path.join(base_dir, 'database', '.previousCommit')) as f:
+            with open(os.path.join(database_folder, '.previousCommit')) as f:
                 prev_commit = f.read()
 
         subprocess.run('git pull'.split(), stdout=subprocess.DEVNULL)

@@ -4,29 +4,7 @@ from termcolor import colored
 
 def process_results(vuln, data, res):
     totalResults = data["totalResults"]
-    ## Adding more data to vuln dictionary        
-
-    # Not functional right now --------------------------------  
-    # options = ["Output to command line", "Save to Local Storage", "Update Local Storage"]
-    # print(
-    #     colored(
-    #         f'\n\n[*] So, what am i gonna do with {"all these" if totalResults > 1 else "this"} results?',
-    #         "green",
-    #         attrs=["bold"],
-    #     )
-    # )
-    # for i, v in enumerate(options):
-    #     print(colored(f"[{i}]", "green", attrs=["bold"]), v)
-
-    # inpt = input("Enter input > ")
-    # try:
-    #     inpt = int(inpt)
-    # except:
-    #     print(colored("Value entered is not a number: ", "red"), inpt)
-    #     process_results(vuln, data, res)
-    #     return
-    # ---------------------------------------------
-    
+ 
     all_cve_ids = [x for x in vuln.keys()]
 
 

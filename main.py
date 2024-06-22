@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import argparse, requests, json, re, sys, os, datetime, sqlite3, subprocess, time
 from termcolor import colored
+
 from packages.db_manager import *
 from packages.api_calls import *
 from packages.write_output  import *
 from packages.local_calls import *
-
+from packages.option_classes import actions as action_options
 
 
 initialized_database = False
@@ -106,65 +107,13 @@ def main():
     
     base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0?"
     params = {}
-    actions = [
-        {
-            "name": "Get CVEs based on Published date range",
-            "function": get_cve_based_on_pub_date,
-        },
-        {
-            "name": "Search if output contains keywords",
-            "function": keyword_search,
-        },
-        {
-            "name": "Search by CVE id",
-            "function": search_by_cveId,
-        },
-        {
-            "name": "Based on CVSS V2 Severity",
-            "function": based_on_cvssV2Severity,
-        },
-        {
-            "name": "Based on CVSS V3 Severity",
-            "function": based_on_cvssV3Severity,
-        },
-        {
-            "name": "Has Cert Alerts",
-            "function": hasCertAlerts},
-        {
-            "name": "Has Cert Notes", 
-            "function": hasCertNotes},
-        {
-            "name": "Match specified keywords exactly",
-            "function": keywordExactMatch,
-        },
-        {
-            "name": "Get CVEs based on modification date range",
-            "function": get_cve_based_on_mod_date,
-        },
-        {
-            "name": "Results per page",
-            "function": resultsPerPage,
-        }, 
-        {
-            "name": "Start Index",
-            "function": startIndex,
-        },
-        {
-            "name": "Update Local Storage (Perform git pull from cve repo)",
-            "function": update_local_database
-         },
-         {
-             "name": "Show recent CVEs",
-             "function": show_recent_cves
-         }, {
-             "name": "Update Hot Keywords",
-             "function": update_hot_keywords
-         }, {
-             "name": "Local Functions",
-             "function": get_from_local
-         }
-
-    ]
+   
+    if "64 bytes" in subprocess.getoutput("ping -c 1 www.google.com"):
+        online_status = True
+        actions = [x for x in action_options if x.online_required]
+    else:
+        online_status = False
+        actions = [x for x in action_options if not x.online_required]
 
 
     
@@ -175,8 +124,9 @@ def main():
             print_banner()
     else:
         print_banner()
+        print(colored('[*] Internet status: ', 'green' if online_status else 'red'), "Online" if online_status else "Offline")
         for k, v in enumerate(actions):
-            print(colored(f"[{k}]: {v['name']}", "cyan"))
+            print(colored(f"[{k}]: {v.name}", "cyan"))
         inpt = input(
             "\nEnter input number (or numbers, separate them with ',') > ")
         input_filters(inpt)
@@ -211,16 +161,10 @@ def main():
                 print("Invalid value entered")
                 quit()
             else:
-                params = actions[inpt]["function"](params)
+                params = actions[inpt].function(params)
     
 
 
-    if "64 bytes" in subprocess.getoutput("ping -c 1 www.google.com"):
-        print(colored('[*] Internet status: ', 'green'), "Online")
-        online_status = True
-    else:
-        print(colored('[*] Internet status: ', 'red'), "offline")
-        online_status = False
 
     if offline:
         get_from_local(params)

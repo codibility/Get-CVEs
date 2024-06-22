@@ -2,7 +2,12 @@ import os
 
 packages_directory = os.path.dirname(__file__)
 # Removing the packages folder from the path
-main_folder = '/'.join(packages_directory.split('/')[:-1])
+if "packages" in packages_directory:
+    main_folder = '/'.join(packages_directory.split('/')[:-1])
+else:
+    main_folder = packages_directory
+
+
 conf_file = os.path.join(main_folder, 'cve.conf')
 
 
@@ -14,9 +19,13 @@ with open(conf_file) as f:
         key = i[0].strip()
         value = i[1].strip()
 
-        if 'location' in key:
-            if not os.path.isabs(value):
-                value = os.path.join(main_folder, value)
+        if value != "":
+            if 'location' in key:
+                if not os.path.isabs(value):
+                    value = os.path.join(main_folder, value)
+                    if not os.path.exists(value):
+                        print("Invalid File path entered in: ", key, value)
+                        quit()
 
         init_conf[key] = value
 

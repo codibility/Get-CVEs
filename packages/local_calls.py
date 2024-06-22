@@ -4,7 +4,7 @@ from termcolor import colored
 from art import text2art
 
 from packages.db_manager import *
-from packages.api_calls import search_by_cveId, multi_choice
+from packages.api_calls import *
 from packages.write_output import process_json
 from packages.codes_init import *
 from packages.init_conf import init_conf
@@ -18,9 +18,10 @@ languages: list = init_conf['languages']
 username = init_conf['username']
 
 hot_keywords = []
-with open(hot_keywords_file) as f:
-    for i in f:
-        hot_keywords.append(i.strip())
+if hot_keywords_file != "":
+    with open(hot_keywords_file) as f:
+        for i in f:
+            hot_keywords.append(i.strip())
 
 
 def update_hot_keywords(params):
@@ -137,7 +138,7 @@ def local_printer(data: dict[str, dict], params: dict) -> None:
         print(colored('[*] Start index', "green"), start_index)
         print('-'*50, '\n\n')
 
-        for i in range(start_index+ 10):
+        for i in range(start_index, start_index+ 10):
             try:
                 i = all_cves[i]
             except:
@@ -149,7 +150,9 @@ def local_printer(data: dict[str, dict], params: dict) -> None:
             for j in k:
                 print(colored(f'{j}:', 'blue'), k[j])
             print("-"*50)
+   
     
+
     actions = ['Next Batch', 'Previous Batch', 'Write Exploit', 'Search Online']
 
     def search_online():
@@ -300,9 +303,10 @@ def local_fetcher(params: dict) -> None:
                 base_score = colored(base_score, "red", attrs=['blink'])
                 rating = colored("CRICTICAL", "red", attrs=['blink'])
 
-        for k in hot_keywords:
-            if re.search(k, value, re.IGNORECASE):
-                value = re.sub(k, colored(k, 'magenta'), value, flags=re.IGNORECASE)
+        if hot_keywords != []:
+            for k in hot_keywords:
+                if re.search(k, value, re.IGNORECASE):
+                    value = re.sub(k, colored(k, 'magenta'), value, flags=re.IGNORECASE)
 
 
         if color_keyword:
@@ -321,48 +325,23 @@ def local_fetcher(params: dict) -> None:
     return None
 
 
-def search_by_cwe(params: dict, cwe: str = None) -> dict:
-    if cwe == None:
-        print(colored("\n[+] CWE Key search", "magenta", attrs=["bold"]))
-        cwe = input("Enter CWE > ")
-    
-    params["cwe"] = cwe
-    return params 
-
-
-def search_by_cwe_must_match(params: dict, cwe: str = None) -> dict:
-    params = search_by_cwe(params, cwe)
-    params['cweExact'] = params['cwe']
-    del params['cwe']
-
-    return params
-    
-
-
-
 def get_from_local(params: dict):
     '''
     Entry point for searching locally, also serves local specific search parameters
     '''
     print(colored("[-] Internet connection don't seem to be available, searching local database", "red", attrs=["bold"]))
 
-    local_params = [
-        {
-            "name": "Search by CWEs",
-            "function": search_by_cwe
-        }, {
-            "name": "Search by CWEs (Specific)",
-            "function": search_by_cwe_must_match
-        }
-    ]
+    
+    from packages.option_classes import actions
+    local_params = [x for x in actions if not x.online_required]
 
     print('\n')
     print('-'*50)
     print(colored('Search local', 'blue'))
     print('-'*50)
     print('\n')
-    for k, v in enumerate(local_params):
-        print(colored(f"[{k}]: {v['name']}", "cyan"))
+    for k, i in enumerate(local_params):
+        print(colored(f"[{k}]: {i.name}", "cyan"))
 
     inpt = input("Enter your choice > ")
 
