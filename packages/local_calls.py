@@ -61,6 +61,8 @@ def write_exploits(all_cves: list, data: dict[str, dict]):
             code_init = PythonInit()
         case "ruby":
             code_init = RubyInit()
+        case "c":
+            code_init = CInit()
         case _:
             code_init = PythonInit()
 
@@ -105,7 +107,7 @@ def write_exploits(all_cves: list, data: dict[str, dict]):
         for j in cur_cve:
             f.write(f'{j}: {cur_cve[j]}\n')
         f.write(code_init.end_comment + '\n')
-        f.write(code_init.assign_ascii_art(ascii_art))
+        f.write(code_init.assign_ascii_art())
         f.write(code_init.init_code(ascii_art))
 
     os.system(f'code {save_file}')
@@ -119,7 +121,15 @@ def local_printer(data: dict[str, dict], params: dict) -> None:
     '''
     Prints the cves to the terminal
     '''
-    print('\n\n')
+
+    if data == None:
+        os.system("clear")
+        print(colored("Data Not found for search parameters", "red"))
+        for i in params.keys():
+            print(colored(f"{i}:", "dark_grey"), params[i])
+        
+        input("Press any key to return ...")
+        return
 
     all_cves = [x for x in data.keys()]
     all_cves.reverse()
@@ -194,7 +204,7 @@ def local_printer(data: dict[str, dict], params: dict) -> None:
             if start_index + 10 < len(all_cves):
                 start_index += 10
             else:
-                start_index += (len(all_cves) - start_index)
+                start_index += (len(all_cves) -1 - start_index)
         elif inpt == 1:
             if start_index - 10 > 0:
                 start_index -= 10
@@ -262,7 +272,7 @@ def local_fetcher(params: dict) -> None:
         sql_cmd += ';'
 
 
-    if not sql_cmd == "":
+    if not sql_cmd == "" and len(results) == 0:
         curr_year = datetime.datetime.now().year
 
         for year in range(1999, curr_year + 1):
@@ -279,6 +289,11 @@ def local_fetcher(params: dict) -> None:
         color_keyword = True
         keyword: str = params['keywordExactMatch']
     
+
+    if results == [] or (results[0] == None and len(results) == 1):
+        local_printer(None, params)
+        return
+
     for i in results:
         cveId = i[1]
         # location = i[2]
@@ -332,8 +347,9 @@ def get_from_local(params: dict):
     print(colored("[-] Internet connection don't seem to be available, searching local database", "red", attrs=["bold"]))
 
     
-    from packages.option_classes import actions
-    local_params = [x for x in actions if not x.online_required]
+    from packages.option_classes import actions, option_map
+    local_params = [x for x in option_map if actions[x['id']].online_required != "online"]
+    
 
     print('\n')
     print('-'*50)
@@ -341,20 +357,25 @@ def get_from_local(params: dict):
     print('-'*50)
     print('\n')
     for k, i in enumerate(local_params):
-        print(colored(f"[{k}]: {i.name}", "cyan"))
+        print(colored(f"[{k}]: {i['name']}", "cyan"))
 
-    inpt = input("Enter your choice > ")
+    inpt = input("Enter your choice (q -> Quit) > ")
 
     if inpt in ["Q", "q"]:
         print(colored("\n[*] Quitting", "red", attrs=["bold"]))
         quit()
 
     if ',' in inpt:
-        multi_choice(local_params, params, inpt)
+        multi_choice(local_params, actions, params, inpt)
     else:
         if inpt.isnumeric()  and int(inpt) >= 0 and int(inpt) < len(local_params):
             inpt = int(inpt)
-            params = local_params[inpt]["function"](params)
+            choice: int = local_params[inpt]['id']
+            params = actions[choice].function(params)
+            if params != None:
+                local_fetcher(params)
+
+            return
         elif inpt == "":
             pass
         else:
@@ -369,7 +390,7 @@ def get_from_local(params: dict):
  
     return
 
-def show_recent_cves():
+def show_recent_cves(params):
     res =  cur.execute('SELECT * FROM recentCVEs').fetchone()
     res = res[1].split(',')
     local_fetcher(dict(enumerate(res)))

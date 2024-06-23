@@ -1,7 +1,16 @@
 from termcolor import colored
 import datetime, re
 
-def multi_choice(actions: list, params: dict, inpt: str) -> dict:
+def multi_choice(actions: list, all_actions: list, params: dict, inpt: str) -> dict:
+    '''
+    Get params based on input string
+
+    actions: Contain the modified list of all actions based on online status
+    all_actions: Contain all the actions
+    params: All parameters for the search
+    inpt: input string
+    '''
+
     choices = inpt.split(",")
     for i in choices:
         try:
@@ -12,7 +21,9 @@ def multi_choice(actions: list, params: dict, inpt: str) -> dict:
         if inpt > len(actions) or inpt < 0:
             print("Invalid value entered in choice input")
             quit()
-        params = actions[inpt]["function"](params)
+        
+        choice: int = actions[inpt]['id']
+        params = all_actions[choice].function(params)
     return params
 
 

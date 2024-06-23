@@ -6,7 +6,7 @@ from packages.db_manager import *
 from packages.api_calls import *
 from packages.write_output  import *
 from packages.local_calls import *
-from packages.option_classes import actions as action_options
+from packages.option_classes import actions as action_options, option_map
 
 
 initialized_database = False
@@ -103,17 +103,17 @@ def input_filters(inpt):
 
 
 def main():
-
+    os.system("clear")
     
     base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0?"
     params = {}
    
     if "64 bytes" in subprocess.getoutput("ping -c 1 www.google.com"):
         online_status = True
-        actions = [x for x in action_options if x.online_required]
+        actions = [x for x in option_map if action_options[x['id']].online_required != "offline"]
     else:
         online_status = False
-        actions = [x for x in action_options if not x.online_required]
+        actions = [x for x in option_map if action_options[x['id']].online_required != "online"]
 
 
     
@@ -126,12 +126,12 @@ def main():
         print_banner()
         print(colored('[*] Internet status: ', 'green' if online_status else 'red'), "Online" if online_status else "Offline")
         for k, v in enumerate(actions):
-            print(colored(f"[{k}]: {v.name}", "cyan"))
+            print(colored(f"[{k}]: {v['name']}", "cyan"))
         inpt = input(
-            "\nEnter input number (or numbers, separate them with ',') > ")
+            "\nEnter input number (or numbers, separate them with ',', q, Q -> quit) > ")
         input_filters(inpt)
         if "," in inpt:
-            params = multi_choice(actions,params, inpt)
+            params = multi_choice(actions, action_options,params, inpt)
         else:
             if inpt == "q":
                 print(colored("\n[*] Quitting", "red", attrs=["bold"]))
@@ -142,26 +142,21 @@ def main():
                 print("Value entered is not a number", inpt)
                 main()
             
-            if inpt == 11:
-                status_code, message =  update_local_database(initialized_database)
-                if isinstance(message,list):
-                    print('\n'.join(message))
-                else:
-                    print(message)
-                input("Press any key to continue...")
-                os.system('clear')          
-                main()
-            elif inpt == 12:
-                show_recent_cves()
-                main()
-            elif inpt == 14:
-                get_from_local(params)
-                main()
-            elif inpt > len(actions) or inpt < 0:
+            
+
+            if inpt > len(actions) or inpt < 0:
                 print("Invalid value entered")
-                quit()
+                main()
+                return
+            
+            choice: int = actions[inpt]['id']
+            
+            if choice == 11: # Special case to match updating database
+                update_local_database(initialized_database)                          
+                main()
+                return
             else:
-                params = actions[inpt].function(params)
+                params = action_options[choice].function(params)
     
 
 
@@ -179,9 +174,11 @@ def main():
         )
     else:
         code, msg = open_db(initialized_database)
-        get_from_local(params)
+        local_fetcher(params)
 
-    if not online_status: quit()
+    if not online_status:
+        main()
+        return
     
     if output.status_code == 404:
         print(colored("\nServer returned 404", "red",
@@ -192,6 +189,8 @@ def main():
               attrs=["bold"]), "\nquitting...")
         quit()
     process_json(output.content, params)
+    main()
+    return
 
 
 if __name__ == "__main__":

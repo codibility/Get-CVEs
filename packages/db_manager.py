@@ -366,7 +366,9 @@ def update_local_database(initialized_database: bool):
 
 
         if prev_commit == current_commit:
-            return (0, "db up to date")
+            print("Database already up to date")
+            input("Press any key to continue...")
+            return
 
 
         with open(os.path.join(base_dir, 'database', '.previousCommit'), 'w') as f:
@@ -389,13 +391,17 @@ def update_local_database(initialized_database: bool):
         else:
             results = update_changed_files(changed_files)
             if results == 1:
-                return (1, "incomplete files")
+                print("Incomplete files")
+                return
 
         print(colored("[+] Commiting changes to database", "blue"))
         db.commit()
-        return (0, 'Update successful')
+        print("Update successful")
+        input("Press any key to continue...")
+        os.system('clear')
+        return
     else:
-        return (1, 'conn error')
+        print('Connection error')
     
 
 

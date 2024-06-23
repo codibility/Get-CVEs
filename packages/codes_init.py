@@ -22,7 +22,7 @@ class PythonInit:
         self.begin_comment: str = "'''"
         self.end_comment: str = self.begin_comment
 
-    def init_code(self, ascii_art: str):
+    def init_code(self)  -> str:
         '''
         Sets ups the basic structure of the file and prints out the ascii art
         '''
@@ -40,7 +40,7 @@ class RubyInit:
         self.begin_comment: str = "=begin"
         self.end_comment: str = "=end"
 
-    def init_code (self, ascii_art: str):
+    def init_code (self) -> str:
         '''
         Sets ups the basic structure of the file and prints out the ascii art
         '''
@@ -53,4 +53,17 @@ class RubyInit:
         return f'ascii_art = "\n{ascii_art}"'
 
     
+class CInit:
+    def __init__(self) -> None:
+        self.lang: str = "c"
+        self.extension: str = ".c"
+        self.begin_comment: str = "/*"
+        self.end_comment: str = "*/"
+
+    def init_code (self, ascii_art: str):
+        '''
+        Sets ups the basic structure of the file and prints out the ascii art
+        '''
+
+        return '''#include <stdio.h>\n\nint main():\n\tprintf("%s", ascii_art);\nreturn 0;'''
     
