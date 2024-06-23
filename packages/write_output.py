@@ -6,6 +6,7 @@ def process_results(vuln, data, res):
     totalResults = data["totalResults"]
  
     all_cve_ids = [x for x in vuln.keys()]
+    all_cve_ids.reverse() # No one wants to see cve from 1999 first
 
 
     

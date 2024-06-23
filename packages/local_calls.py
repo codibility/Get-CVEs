@@ -223,6 +223,11 @@ def local_fetcher(params: dict) -> None:
     sql_cmd: str = ""
     color_keyword = False
 
+    if params == {}:
+        print(colored("Empty parameters...", "red"))
+        return
+
+
     if len(params.keys()) == 1 and 'cveId' in params:
         year = params['cveId'].split('-')[1]
         cveId  = params['cveId']
@@ -340,7 +345,9 @@ def local_fetcher(params: dict) -> None:
     return None
 
 
-def get_from_local(params: dict):
+def get_from_local(params: dict) -> dict:
+    global online_status
+    online_status = False
     '''
     Entry point for searching locally, also serves local specific search parameters
     '''
@@ -372,23 +379,12 @@ def get_from_local(params: dict):
             inpt = int(inpt)
             choice: int = local_params[inpt]['id']
             params = actions[choice].function(params)
-            if params != None:
-                local_fetcher(params)
-
-            return
         elif inpt == "":
             pass
         else:
             print(colored("\n[*] Quitting", "red", attrs=["bold"]))
-            return
-        
-        
-    
 
-
-    local_fetcher(params)
- 
-    return
+    return params
 
 def show_recent_cves(params):
     res =  cur.execute('SELECT * FROM recentCVEs').fetchone()

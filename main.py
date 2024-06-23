@@ -103,6 +103,7 @@ def input_filters(inpt):
 
 
 def main():
+    global online_status
     os.system("clear")
     
     base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0?"
@@ -162,8 +163,9 @@ def main():
 
 
     if offline:
-        get_from_local(params)
-        main()
+        params = get_from_local(params)
+        online_status = False
+
 
     if online_status:
         output = requests.get(base_url, params=params)
@@ -175,6 +177,7 @@ def main():
     else:
         code, msg = open_db(initialized_database)
         local_fetcher(params)
+        
 
     if not online_status:
         main()
@@ -189,6 +192,7 @@ def main():
               attrs=["bold"]), "\nquitting...")
         quit()
     process_json(output.content, params)
+    input("Press any key to return...")
     main()
     return
 
