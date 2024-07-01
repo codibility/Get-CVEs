@@ -346,8 +346,6 @@ def local_fetcher(params: dict) -> None:
 
 
 def get_from_local(params: dict) -> dict:
-    global online_status
-    online_status = False
     '''
     Entry point for searching locally, also serves local specific search parameters
     '''
@@ -384,6 +382,9 @@ def get_from_local(params: dict) -> dict:
         else:
             print(colored("\n[*] Quitting", "red", attrs=["bold"]))
 
+
+    # passing online_status in params as a temporary fix
+    params["online_status"] = False
     return params
 
 def show_recent_cves(params):

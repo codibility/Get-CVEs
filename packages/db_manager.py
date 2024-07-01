@@ -62,7 +62,7 @@ def total_file_indexer():
             value = current_value_index['value']
             problem_type = current_value_index['problem_type']
             base_score = current_value_index['base_score']
-            pub_date = current_value_index['pub_date']          
+            pub_date = current_value_index['pub_date']
 
             
 

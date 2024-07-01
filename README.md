@@ -11,4 +11,4 @@ Search for cve data from your command line
 ## Errors in Database?
 _Very high chance that you'll have a few_
 
-In case of errors in the database and you'll need to update a lot of the entries, you can get the hash id of a commit that's far back enough and change it the the previousCommit file to start adjusting from that commit
+In case of errors in the database and you'll need to update a lot of the entries, you can get the hash id of a commit that's far back enough and change it the `previousCommit` file to start adjusting from that commit

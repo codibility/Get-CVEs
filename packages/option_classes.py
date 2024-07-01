@@ -29,7 +29,7 @@ actions = [
     ActionTemplate("Start Index", startIndex, "online", 10),
     ActionTemplate("Update Local Storage (Perform git pull from cve repo)", update_local_database, "online", 11),
     ActionTemplate("Show recent CVEs", show_recent_cves, "both", 12),
-    ActionTemplate("Update Hot Keywords", update_hot_keywords, "both", 12),
+    ActionTemplate("Update Hot Keywords", update_hot_keywords, "both", 13),
     ActionTemplate("Local Functions", get_from_local, "online", 14), # Should only show up on the online functions
     ActionTemplate("Search by CWEs", search_by_cwe, "offline", 15),
     ActionTemplate("Search by CWEs (Exact Match)", search_by_cwe_must_match, "offline", 16)

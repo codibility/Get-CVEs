@@ -9,8 +9,11 @@ from packages.local_calls import *
 from packages.option_classes import actions as action_options, option_map
 
 
+AUTHOR = "Toymaker"
+VERSION = "v1.0.1"
 initialized_database = False
-offline = False
+offline = False # User specified option to run offline or online
+online_status = True
 
 
 ## Adding the arguments
@@ -25,7 +28,7 @@ def parse_arguments(params):
     parser.add_argument("--offline", help="Search offline data strictly", action="store_true")
     parser.add_argument('--silent', '-s', help="Repress printing of banner",  action="store_true")
     args = parser.parse_args()
-    
+
     global silent
     silent = False
     global offline
@@ -36,29 +39,25 @@ def parse_arguments(params):
     if (args.cve):
         CVE = args.cve
         params = search_by_cveId(params, CVE)
-    
+
     if (args.keysearch):
         keyword = args.keysearch
         params = keyword_search(params, keyword)
-    
-    if (args.cv2severity): 
+
+    if (args.cv2severity):
         cv2severity = int(args.cv2severity)
         params = based_on_cvssV2Severity(params, cv2severity)
-    
-    if (args.cv3severity): 
+
+    if (args.cv3severity):
         cv3severity = int(args.cv3severity)
         params = based_on_cvssV3Severity(params, cv3severity)
-    
+
     if (args.silent):
         silent = True
 
-    
-
-    
-
-
-    
     return params
+
+
 
 def print_banner():
     print("\n\n")
@@ -67,9 +66,11 @@ def print_banner():
     columns, lines = os.get_terminal_size()
     print("\n\n")
     # Print the string to the center of the terminal
-    print(f'{"*" * (columns - 25):^{columns}}')
-    print(f'{"Author: Toymaker":^{columns}}')
-    print(f'{"*" * (columns - 25):^{columns}}')
+
+    print(("*" * int(columns/4 * 3)).center(columns, " "))
+    print(f"Author: {AUTHOR}".center(columns, " "))
+    print(f"Version: {VERSION}".center(columns, " "))
+    print(("*" * int(columns/4 * 3)).center(columns, " "))
 
 
 
@@ -105,10 +106,10 @@ def input_filters(inpt):
 def main():
     global online_status
     os.system("clear")
-    
+
     base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0?"
     params = {}
-   
+
     if "64 bytes" in subprocess.getoutput("ping -c 1 www.google.com"):
         online_status = True
         actions = [x for x in option_map if action_options[x['id']].online_required != "offline"]
@@ -117,7 +118,7 @@ def main():
         actions = [x for x in option_map if action_options[x['id']].online_required != "online"]
 
 
-    
+
     if len(sys.argv) > 1:
         params = parse_arguments(params)
         global silent
@@ -142,24 +143,23 @@ def main():
             except:
                 print("Value entered is not a number", inpt)
                 main()
-            
-            
+                return
+
+
 
             if inpt > len(actions) or inpt < 0:
                 print("Invalid value entered")
                 main()
                 return
-            
+
             choice: int = actions[inpt]['id']
-            
+
             if choice == 11: # Special case to match updating database
-                update_local_database(initialized_database)                          
+                update_local_database(initialized_database)
                 main()
                 return
             else:
                 params = action_options[choice].function(params)
-    
-
 
 
     if offline:
@@ -167,22 +167,23 @@ def main():
         online_status = False
 
 
-    if online_status:
-        output = requests.get(base_url, params=params)
-        print(
-        colored(f"\n\n[*] Request made to {output.url}", "blue", attrs=["bold"]),
+    # For now, i'm going to have to manually pass the online_status in the params dictionary, i'll find a more effiecient way to pass the online_status around, hopefully
+    if not online_status or "online_status" in params.keys():
+        if "online_status" in params:
+            del params["online_status"]
+
+        code, msg = open_db(initialized_database)
+        local_fetcher(params)
+        main()
+        return 
+
+    output = requests.get(base_url, params=params)
+    print(
+    colored(f"\n\n[*] Request made to {output.url}", "blue", attrs=["bold"]),
         "\nThis might take a while: ...",
         "\n\n",
         )
-    else:
-        code, msg = open_db(initialized_database)
-        local_fetcher(params)
-        
 
-    if not online_status:
-        main()
-        return
-    
     if output.status_code == 404:
         print(colored("\nServer returned 404", "red",
               attrs=["bold"]), "\nquitting...")
